@@ -18,7 +18,6 @@ class InfernalPunisher(Player):
         self.cooperation_score = 0  # Track opponent's cooperative behavior
         self.punishment_mode = False
         self.punishment_rounds = 0
-        self.history = []
 
     def strategy(self, opponent: Player) -> int:
         """

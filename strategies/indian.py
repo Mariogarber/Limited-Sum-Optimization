@@ -20,9 +20,7 @@ class IndianStrategy(Player):
     """
 
     def __init__(self, game: Game, name: str = "", k=10, burnout_epochs=20):
-        self.name = name
-        self.game = game
-        self.history  = []
+        super().__init__(game, name)
         self.init_probabilities = {
             0: 0,
             1: 0.1,
@@ -52,11 +50,8 @@ class IndianStrategy(Player):
         """
         opponent_history = opponent.history
         i = len(opponent_history)
-        last_2_opponent_result = opponent_history[-2] if len(opponent_history) > 1 else 2
-        last_my_result = self.history[-1] if len(self.history) > 0 else 2
         if i <= self.burnout_epochs:
             result=  np.random.choice(list(self.init_probabilities.keys()), p=list(self.init_probabilities.values()))
-            self.cond_prob[last_my_result].append(last_2_opponent_result)
         else:
             last_opponent_history = opponent.history[-self.k:]
             prob = [last_opponent_history.count(a) / len(last_opponent_history) for a in ACTIONS]
@@ -85,9 +80,7 @@ class IndianGreedyStrategy(Player):
     """
 
     def __init__(self, game: Game, name: str = "", k=10, burnout_epochs=20):
-        self.name = name
-        self.game = game
-        self.history  = []
+        super().__init__(game, name)
         self.init_probabilities = {
             0: 0,
             1: 0.1,
@@ -120,11 +113,15 @@ class IndianGreedyStrategy(Player):
         last_2_opponent_result = opponent_history[-2] if len(opponent_history) > 1 else 2
         last_my_result = self.history[-1] if len(self.history) > 0 else 2
         if i <= self.burnout_epochs:
-            result=  np.random.choice(list(self.init_probabilities.keys()), p=list(self.init_probabilities.values()))
+            result = np.random.choice(list(self.init_probabilities.keys()), p=list(self.init_probabilities.values()))
             self.cond_prob[last_my_result].append(last_2_opponent_result)
         else:
             last_opponent_history = self.cond_prob[last_my_result][-self.k:]
-            prob = [last_opponent_history.count(a) / len(last_opponent_history) for a in ACTIONS]
-            opponent_next = np.random.choice(ACTIONS, p=prob)
-            result = max(1, min(5, 5 - opponent_next))
-        return result
+            if len(last_opponent_history) == 0:
+                prob = self.init_probabilities.values()
+            else:
+                prob = [last_opponent_history.count(a) / len(last_opponent_history) for a in ACTIONS]
+                if sum(prob) == 0:
+                    prob = self.init_probabilities.values()
+                else:
+                    prob = np.array(prob) / np.sum(prob)
